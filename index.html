@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终将升起烈阳 | 个人主页</title>
+    <!-- 引入 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Poppins:wght@300;400;600&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Markdown 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* --- 全局变量与重置 --- */
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+            --primary-neon: #00f3ff; /* 青色霓虹 */
+            --secondary-neon: #bc13fe; /* 紫色霓虹 */
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Poppins', 'Noto Sans SC', sans-serif;
+            --font-tech: 'Orbitron', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 自定义光标 - 五角星 SVG Data URI */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+            /* 使用 SVG 绘制一个发光的青色五角星作为光标 */
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%2300f3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' fill='%2300f3ff' fill-opacity='0.3'/></svg>") 16 16, auto;
+        }
+
+        /* 链接悬停时改变光标样式以保持一致性 */
+        a, button, .cta-btn, .project-card, .social-btn, .fake-search-box, .search-dropdown-item, .avatar-link, .carousel-btn, .volume-btn {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23bc13fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' fill='%23bc13fe' fill-opacity='0.6'/></svg>") 16 16, pointer;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        ul { list-style: none; }
+
+        /* --- 背景 Canvas --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0f172a 0%, #000000 100%);
+        }
+        
+        /* --- 鼠标拖尾 Canvas --- */
+        #canvas-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999; /* 置于最顶层 */
+            pointer-events: none; /* 确保不阻挡鼠标点击 */
+        }
+
+        /* --- 通用工具类 --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-title {
+            font-family: var(--font-tech);
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary-neon), #fff, var(--secondary-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-neon), transparent);
+        }
+
+        /* 滚动动画类 */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- 毛玻璃效果混合 --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* --- 导航栏 --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.2rem 0;
+            z-index: 100;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        nav.scrolled {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-tech), 'Noto Sans SC';
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-neon);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            font-weight: 500;
+            position: relative;
+            opacity: 0.8;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-neon);
+            opacity: 1;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-neon);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover::before { width: 100%; }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding-top: 60px;
+        }
+
+        .hero-content h1 {
+            font-family: var(--font-tech);
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.6), 0 0 40px rgba(188, 19, 254, 0.4);
+        }
+
+        .hero-content h1 span {
+            color: var(--primary-neon);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #bbb;
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+            min-height: 1.6em;
+        }
+
+        .hero-social {
+            margin-bottom: 2.5rem;
+        }
+        
+        .hero-social .social-links {
+            margin-top: 0;
+            gap: 1.5rem;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 12px 36px;
+            background: transparent;
+            color: var(--primary-neon);
+            border: 2px solid var(--primary-neon);
+            border-radius: 50px;
+            font-family: var(--font-tech);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: var(--primary-neon);
+            z-index: -1;
+            transition: width 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+        }
+        .cta-btn:hover::before { width: 100%; }
+
+        /* --- About Section --- */
+        .about {
+            padding: 6rem 0;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: var(--glass-border);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .avatar-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .avatar-link:hover {
+            transform: scale(1.02); 
+        }
+        
+        .avatar-link:hover .avatar-img {
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+            position: relative;
+            z-index: 2;
+            display: block;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .avatar-wrapper::before, .avatar-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            border-radius: 24px;
+            z-index: 1;
+            filter: blur(15px);
+            opacity: 0.5;
+            animation: pulse-glow 4s infinite alternate;
+        }
+
+        .about-text h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .about-text p {
+            margin-bottom: 2rem;
+            color: #aaa;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .skill-tag {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary-neon);
+            border-radius: 5px;
+            color: var(--primary-neon);
+            font-family: var(--font-tech);
+            font-size: 0.85rem;
+            transition: 0.3s;
+            cursor: default;
+        }
+
+        .skill-tag:hover {
+            background: var(--primary-neon);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary-neon);
+        }
+
+        /* --- Projects Section --- */
+        .projects {
+            padding: 6rem 0;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .project-card {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        }
+
+        .project-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .project-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--secondary-neon);
+        }
+
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .project-desc {
+            font-size: 0.95rem;
+            color: #aaa;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .project-link {
+            align-self: flex-start;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-link:hover {
+            color: var(--primary-neon);
+            gap: 12px; 
+        }
+
+        /* --- Video Carousel CSS (层叠式轮播 - 布局调整) --- */
+        .carousel-section {
+            margin-top: 4rem;
+        }
+        
+        .carousel-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-neon);
+            border-left: 4px solid var(--secondary-neon);
+            padding-left: 1rem;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9; /* 保持 16:9 比例 */
+            /* 调整：不再限制最大宽度，填满容器 */
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: #000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .video-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0; /* 默认隐藏 */
+            transition: opacity 0.5s ease-in-out;
+            z-index: 1;
+            pointer-events: none; /* 隐藏时不响应点击 */
+        }
+
+        .video-item.active {
+            opacity: 1; /* 激活显示 */
+            z-index: 2;
+            pointer-events: auto;
+        }
+
+        .video-item iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 轮播导航按钮 - 样式更新为社交按钮风格 */
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--primary-neon);
+            border: 1px solid var(--primary-neon);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            font-size: 1.2rem;
+            
+            /* 弹性动画过渡 */
+            transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden; 
+        }
+
+        .carousel-btn i {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1;
+        }
+
+        .carousel-btn:hover {
+            background: var(--text-color); /* 变白 */
+            border-color: var(--primary-neon);
+            color: #000; /* 图标变黑 */
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .carousel-btn:hover i {
+            transform: scale(1.4); /* 内部图标放大 */
+        }
+
+        .carousel-btn.prev { left: 20px; }
+        .carousel-btn.next { right: 20px; }
+
+        /* 音量控制按钮 */
+        .volume-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+        }
+
+        .volume-btn:hover {
+            background: var(--primary-neon);
+            color: #000;
+            border-color: var(--primary-neon);
+        }
+
+        .volume-btn.active {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--primary-neon);
+            color: var(--primary-neon);
+        }
+
+        /* --- AI Lab Section --- */
+        .ai-lab {
+            padding: 6rem 0;
+            position: relative;
+        }
+        
+        .ai-lab-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .ai-feature-card {
+            padding: 3rem;
+            text-align: center;
+            position: relative; 
+            z-index: 10;
+        }
+        
+        .ai-feature-card i.main-icon {
+            font-size: 3rem;
+            color: var(--secondary-neon);
+            margin-bottom: 1.5rem;
+        }
+        
+        .ai-feature-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        /* 新的搜索框样式 */
+        .fake-search-box {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 2rem auto 0;
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem; 
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--glass-border);
+            border-radius: 50px;
+            color: #aaa;
+            font-family: var(--font-main);
+            text-align: left;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .fake-search-box:hover {
+            border-color: var(--primary-neon);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            color: #fff;
+        }
+
+        /* 左侧点击区域 */
+        .search-left {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            cursor: pointer;
+            height: 100%;
+            padding-right: 1rem;
+        }
+
+        .search-left i {
+            color: var(--primary-neon);
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
+        
+        .search-left span {
+            font-size: 1rem;
+        }
+
+        /* 右侧下拉菜单触发器 */
+        .search-dropdown-trigger {
+            position: relative;
+            font-size: 0.8rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--primary-neon);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .search-dropdown-trigger:hover {
+            background: var(--primary-neon);
+            color: #000;
+        }
+
+        /* 下拉菜单 */
+        .search-dropdown-menu {
+            position: absolute;
+            top: 115%;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            min-width: 140px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .search-dropdown-menu.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .search-dropdown-item {
+            padding: 8px 12px;
+            color: #ccc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary-neon);
+        }
+
+        .search-dropdown-item.selected {
+            color: var(--primary-neon);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        /* --- Contact Section --- */
+        .contact {
+            padding: 6rem 0 8rem 0;
+        }
+
+        .contact-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden; 
+        }
+
+        .social-btn i {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1;
+        }
+
+        .social-btn:hover {
+            background: var(--text-color);
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+            z-index: 10;
+        }
+
+        .social-btn:hover i {
+            color: #000;
+            transform: scale(1.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            font-size: 0.9rem;
+            color: #666;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* --- Toast Notification --- */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-neon);
+            color: var(--primary-neon);
+            padding: 12px 24px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            opacity: 0;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: var(--font-tech);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* --- 动画 Keyframes --- */
+        @keyframes pulse-glow {
+            0% { opacity: 0.3; filter: blur(15px); }
+            100% { opacity: 0.7; filter: blur(25px); }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* --- 响应式适配 --- */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 3rem; }
+            .about-grid { grid-template-columns: 1fr; text-align: center; }
+            .avatar-wrapper { margin-bottom: 2rem; width: 250px; height: 250px;}
+            .skills-container { justify-content: center; }
+            
+            .nav-links { display: none; } 
+            
+            .cta-btn { width: 100%; text-align: center; }
+            .fake-search-box { max-width: 100%; }
+            .social-links { gap: 1rem; }
+            .social-btn { width: 45px; height: 45px; font-size: 1.2rem; }
+            
+            .carousel-btn { width: 40px; height: 40px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 动态 Canvas 背景 -->
+    <canvas id="canvas-bg"></canvas>
+    
+    <!-- 鼠标拖尾 Canvas -->
+    <canvas id="canvas-cursor"></canvas>
+
+    <!-- 导航栏 -->
+    <nav id="navbar">
+        <div class="container nav-content">
+            <a href="#" class="logo">终将升起<span style="color:#fff">烈阳</span></a>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#projects">作品</a></li>
+                <li><a href="#ai-lab">AI Lab ✨</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 英雄区 Hero Section -->
+    <section id="home" class="hero">
+        <div class="container hero-content fade-in-up">
+            <h1>你好，我是 <span>烈阳哥</span></h1>
+            <div class="hero-subtitle">
+                <span id="typewriter"></span><span style="animation: blink 1s infinite">|</span>
+            </div>
+            <div class="hero-social">
+                <div class="social-links">
+                    <a href="https://github.com/zhiqiangme/" target="_blank" class="social-btn" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://oshwhub.com/mydeimos/works" target="_blank" class="social-btn" title="嘉立创开源平台"><i class="fa-solid fa-microchip"></i></a>
+                    <a href="https://space.bilibili.com/355838070" target="_blank" class="social-btn" title="Bilibili"><i class="fa-brands fa-bilibili"></i></a>
+                    <a href="https://www.douyin.com/user/MS4wLjABAAAAwBZn3IqAfsl9nUZkOBWyQ473U4ye61kQ-7SdkV24FdE" target="_blank" class="social-btn" title="抖音"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="javascript:void(0)" class="social-btn wechat-btn-trigger" title="微信号: Lu_Yuze (点击复制)"><i class="fa-brands fa-weixin"></i></a>
+                    <a href="mailto:Mydeimos@qq.com" class="social-btn" title="发送邮件"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+            <a href="#ai-lab" class="cta-btn">体验 AI 灵感 ✨</a>
+        </div>
+    </section>
+
+    <!-- 关于我 About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title fade-in-up">关于我</h2>
+            <div class="about-grid">
+                <div class="avatar-wrapper fade-in-up">
+                    <a href="#" target="_blank" class="avatar-link" title="点击访问我的主页">
+                        <img src="IMG_20250328_215215.jpeg" onerror="this.src='https://ui-avatars.com/api/?name=Lie+Yang&background=0D8ABC&color=fff&size=300'" alt="烈阳哥的头像" class="avatar-img glass-panel">
+                    </a>
+                </div>
+                <div class="about-text fade-in-up">
+                    <h3>数字创造者 & 全栈开发者</h3>
+                    <p>热衷于探索代码与艺术的边界。我专注于构建高性能、视觉震撼的 Web 应用。不仅仅是写代码，更是用技术将想象力具象化。目前正在深入研究 AI 辅助设计与生成式交互。</p>
+                    <p>如果你的项目需要一点“未来感”，那你找对人了。</p>
+                    <div class="skills-container">
+                        <span class="skill-tag">HTML5 / CSS3</span>
+                        <span class="skill-tag">JavaScript (ES6+)</span>
+                        <span class="skill-tag">React / Vue</span>
+                        <span class="skill-tag">Three.js / WebGL</span>
+                        <span class="skill-tag">Tongyi Qianwen</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">Open Hardware</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 作品展示 Projects Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="section-title fade-in-up">精选作品</h2>
+            <div class="projects-grid">
+                <div class="project-card glass-panel fade-in-up">
+                    <div class="project-icon"><i class="fa-solid fa-vr-cardboard"></i></div>
+                    <h3 class="project-title">Neon Verse VR</h3>
+                    <p class="project-desc">基于 WebXR 的沉浸式虚拟画廊，用户可以在浏览器中浏览 NFT 艺术品，支持 VR 设备。</p>
+                    <a href="#" class="project-link">查看详情 <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="project-card glass-panel fade-in-up" style="transition-delay: 0.1s">
+                    <div class="project-icon"><i class="fa-solid fa-robot"></i></div>
+                    <h3 class="project-title">AI 助手 "Jarvis"</h3>
+                    <p class="project-desc">集成 OpenAI API 的个人效率工具，具备自然语言任务管理、日程规划与代码审查功能。</p>
+                    <a href="#" class="project-link">查看详情 <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="project-card glass-panel fade-in-up" style="transition-delay: 0.2s">
+                    <div class="project-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <h3 class="project-title">Crypto Dash</h3>
+                    <p class="project-desc">实时加密货币数据可视化仪表盘，采用了 D3.js 绘制复杂的 K 线图与交易热力图。</p>
+                    <a href="#" class="project-link">查看详情 <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <!-- 改造：Bilibili 视频轮播区域 (Stack/Overlap Slider) -->
+            <div class="carousel-section fade-in-up">
+                <h3 class="carousel-title"><i class="fa-brands fa-bilibili"></i> Bilibili 视频展播</h3>
+                <!-- 布局调整：max-width 改为 100%，与上方卡片对齐 -->
+                <div class="carousel-container" id="video-carousel">
+                    <!-- 左右切换按钮 -->
+                    <div class="carousel-btn prev" id="carousel-prev"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div class="carousel-btn next" id="carousel-next"><i class="fa-solid fa-chevron-right"></i></div>
+                    
+                    <!-- 音量切换按钮 (New) -->
+                    <div class="volume-btn" id="volume-toggle">
+                        <i class="fa-solid fa-volume-xmark" id="volume-icon"></i>
+                        <span id="volume-text">开启声音</span>
+                    </div>
+
+                    <!-- 视频 1 (默认显示 active, 初始 muted=1, autoplay=1) -->
+                    <div class="video-item active">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1hHnAztENm&page=1&high_quality=1&danmaku=0&autoplay=1&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- 视频 2 -->
+                    <div class="video-item">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1U8u2zDE4F&page=1&high_quality=1&danmaku=0&autoplay=0&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- 视频 3 -->
+                    <div class="video-item">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1sKFNe5E13&page=1&high_quality=1&danmaku=0&autoplay=0&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- 视频 4 -->
+                    <div class="video-item">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1R6W4zVEoa&page=1&high_quality=1&danmaku=0&autoplay=0&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- 视频 5 -->
+                    <div class="video-item">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1VYJDzaECX&page=1&high_quality=1&danmaku=0&autoplay=0&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- 视频 6 -->
+                    <div class="video-item">
+                        <iframe src="https://player.bilibili.com/player.html?bvid=BV1ZMWvzTECo&page=1&high_quality=1&danmaku=0&autoplay=0&muted=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Lab Section -->
+    <section id="ai-lab" class="ai-lab">
+        <div class="container ai-lab-container fade-in-up">
+            <h2 class="section-title">未来实验室 ✨</h2>
+            <div class="glass-panel ai-feature-card">
+                <i class="fa-solid fa-brain main-icon"></i>
+                <h3>探索无限可能</h3>
+                <p style="color: #aaa; margin-bottom: 1rem;">选择你喜欢的 AI 模型，开启对话与创作。</p>
+                <div class="fake-search-box" id="ai-search-box">
+                    <div class="search-left" id="ai-search-jump">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>有什么可以帮你的吗？</span>
+                    </div>
+                    <div class="search-dropdown-trigger" id="ai-dropdown-trigger">
+                        <span id="current-engine-name">Qwen</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i>
+                        <div class="search-dropdown-menu" id="ai-dropdown-menu">
+                            <div class="search-dropdown-item selected" data-url="https://chat.qwen.ai/" data-name="Qwen">Qwen</div>
+                            <div class="search-dropdown-item" data-url="https://chatgpt.com/" data-name="ChatGPT">ChatGPT</div>
+                            <div class="search-dropdown-item" data-url="https://gemini.google.com/" data-name="Gemini">Gemini</div>
+                            <div class="search-dropdown-item" data-url="https://tongyi.aliyun.com/" data-name="通义千问">通义千问</div>
+                            <div class="search-dropdown-item" data-url="https://www.doubao.com/" data-name="豆包">豆包</div>
+                            <div class="search-dropdown-item" data-url="https://chat.deepseek.com/" data-name="DeepSeek">DeepSeek</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container contact-wrapper fade-in-up">
+            <h2 class="section-title">保持联络</h2>
+            <p style="color: #aaa; margin-bottom: 2rem;">无论是合作邀请，还是想聊聊最新的科技趋势，随时欢迎。</p>
+            <div class="social-links">
+                <a href="https://github.com/zhiqiangme/" target="_blank" class="social-btn" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a href="https://oshwhub.com/mydeimos/works" target="_blank" class="social-btn" title="嘉立创开源平台"><i class="fa-solid fa-microchip"></i></a>
+                <a href="https://space.bilibili.com/355838070" target="_blank" class="social-btn" title="Bilibili"><i class="fa-brands fa-bilibili"></i></a>
+                <a href="https://www.douyin.com/user/MS4wLjABAAAAwBZn3IqAfsl9nUZkOBWyQ473U4ye61kQ-7SdkV24FdE" target="_blank" class="social-btn" title="抖音"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="javascript:void(0)" class="social-btn wechat-btn-trigger" title="微信号: Lu_Yuze (点击复制)"><i class="fa-brands fa-weixin"></i></a>
+                <a href="mailto:Mydeimos@qq.com" class="social-btn" title="发送邮件"><i class="fa-solid fa-envelope"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 提示框元素 -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-check-circle"></i> 微信号 Lu_Yuze 已复制
+    </div>
+
+    <footer>
+        <p>&copy; 2023-2025 烈阳哥 Lie Yang Ge. All Rights Reserved. Design by Future Tech.</p>
+    </footer>
+
+    <!-- JavaScript 交互逻辑 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 0. 微信复制功能 ---
+            const wechatBtns = document.querySelectorAll('.wechat-btn-trigger');
+            const toast = document.getElementById('toast');
+
+            wechatBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const wechatId = 'Lu_Yuze';
+                    navigator.clipboard.writeText(wechatId).then(() => {
+                        showToast();
+                    }).catch(err => {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = wechatId;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        showToast();
+                    });
+                });
+            });
+
+            function showToast() {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // --- 视频轮播逻辑 (智能版 - 带音量按钮) ---
+            const videoItems = document.querySelectorAll('.video-item');
+            const prevBtn = document.getElementById('carousel-prev');
+            const nextBtn = document.getElementById('carousel-next');
+            const volumeBtn = document.getElementById('volume-toggle');
+            const volumeIcon = document.getElementById('volume-icon');
+            const volumeText = document.getElementById('volume-text');
+            
+            let currentVideoIndex = 0;
+            let isSoundOn = false; // 全局声音开关状态
+            let autoSwitchTimer = null; // 定时器引用
+
+            // 更新后的视频时长配置 (毫秒)
+            const videoDurations = [
+                7000,  // 视频 1: 7s
+                23000, // 视频 2: 23s
+                12000, // 视频 3: 12s
+                8000,  // 视频 4: 8s
+                11000, // 视频 5: 11s
+                20000  // 视频 6: 20s
+            ];
+
+            // Stop auto switch helper
+            function stopAutoSwitch() {
+                if (autoSwitchTimer) {
+                    clearTimeout(autoSwitchTimer);
+                    autoSwitchTimer = null;
+                    console.log("Auto switch stopped.");
+                }
+            }
+
+            function updateVolumeUI() {
+                if (isSoundOn) {
+                    volumeIcon.className = 'fa-solid fa-volume-high';
+                    volumeText.textContent = '声音已开';
+                    volumeBtn.classList.add('active');
+                } else {
+                    volumeIcon.className = 'fa-solid fa-volume-xmark';
+                    volumeText.textContent = '开启声音';
+                    volumeBtn.classList.remove('active');
+                }
+            }
+
+            function showVideo(index) {
+                // 清除旧定时器 (如果存在)
+                if (autoSwitchTimer) clearTimeout(autoSwitchTimer);
+
+                // 1. 隐藏当前所有视频，并停止播放
+                videoItems.forEach((item, i) => {
+                    if (item.classList.contains('active')) {
+                        item.classList.remove('active');
+                        const iframe = item.querySelector('iframe');
+                        if (iframe) {
+                            let src = iframe.src;
+                            // 停止播放，强制静音以防后台声音
+                            src = src.replace('autoplay=1', 'autoplay=0');
+                            if (!src.includes('muted=1')) {
+                                src = src.replace('muted=0', 'muted=1');
+                            }
+                            iframe.src = src;
+                        }
+                    }
+                });
+
+                // 2. 显示目标视频
+                videoItems[index].classList.add('active');
+                const activeIframe = videoItems[index].querySelector('iframe');
+                if(activeIframe) {
+                    let src = activeIframe.src;
+                    
+                    // 始终自动播放
+                    src = src.replace('autoplay=0', 'autoplay=1');
+                    
+                    // 根据全局声音状态决定是否静音
+                    if (isSoundOn) {
+                        src = src.replace('muted=1', 'muted=0');
+                    } else {
+                        // 确保是静音状态
+                        if (!src.includes('muted=1')) {
+                            src = src.replace('muted=0', 'muted=1');
+                        }
+                    }
+                    activeIframe.src = src;
+                }
+                currentVideoIndex = index;
+
+                // 3. 设置下一个视频的自动切换定时器
+                // 注意：如果定时器已经被stopAutoSwitch置为null（因为页面不可见），这里重新设置会重启它
+                // 如果页面当前是不可见的（hidden），我们不应该启动新的定时器
+                if (!document.hidden) {
+                    const duration = videoDurations[index] || 10000; // 默认10s
+                    autoSwitchTimer = setTimeout(() => {
+                        let newIndex = currentVideoIndex + 1;
+                        if (newIndex >= videoItems.length) newIndex = 0;
+                        showVideo(newIndex);
+                    }, duration);
+                }
+            }
+
+            // 初始化：启动第一个视频
+            // 这里也要检查页面是否可见，如果是后台打开的网页，不应该启动自动播放逻辑
+            if (!document.hidden) {
+                autoSwitchTimer = setTimeout(() => {
+                    let newIndex = currentVideoIndex + 1;
+                    if (newIndex >= videoItems.length) newIndex = 0;
+                    showVideo(newIndex);
+                }, videoDurations[0]);
+            }
+
+            // --- 交互事件 ---
+
+            // Handle visibility change (User switches tabs or minimizes)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopAutoSwitch();
+                } else {
+                    // 如果用户回到页面，且没有定时器，可以选择是否恢复播放
+                    // 这里我们选择简单逻辑：恢复当前视频的播放（可能会重头开始）
+                    // 或者不做处理，等用户手动点击。
+                    // 为了体验连续性，尝试恢复：
+                    if (!autoSwitchTimer) {
+                         showVideo(currentVideoIndex);
+                    }
+                }
+            });
+
+            // Handle window blur (User clicks iframe or clicks outside window)
+            window.addEventListener('blur', () => {
+                // Existing iframe detection logic
+                const activeItem = document.querySelector('.video-item.active');
+                if (activeItem) {
+                    const iframe = activeItem.querySelector('iframe');
+                    // 如果页面失去焦点，且焦点转移到了当前的 iframe 上
+                    if (document.activeElement === iframe) {
+                        stopAutoSwitch();
+                    }
+                }
+            });
+
+            // 点击音量按钮：切换全局声音状态，并立即刷新当前视频
+            volumeBtn.addEventListener('click', () => {
+                isSoundOn = !isSoundOn; // 切换状态
+                updateVolumeUI();
+                // 立即应用到当前视频
+                showVideo(currentVideoIndex); 
+            });
+
+            // 切换按钮：切换视频 (同时如果还没开声音，可选开启，这里保持遵守全局开关)
+            // 如果您希望点击切换按钮也自动开启声音，可以在这里设置 isSoundOn = true;
+            prevBtn.addEventListener('click', () => {
+                isSoundOn = true; // 用户交互后默认开启声音
+                updateVolumeUI();
+                let newIndex = currentVideoIndex - 1;
+                if (newIndex < 0) newIndex = videoItems.length - 1;
+                showVideo(newIndex);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                isSoundOn = true; // 用户交互后默认开启声音
+                updateVolumeUI();
+                let newIndex = currentVideoIndex + 1;
+                if (newIndex >= videoItems.length) newIndex = 0;
+                showVideo(newIndex);
+            });
+
+            // 键盘控制
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    isSoundOn = true; // 用户交互后默认开启声音
+                    updateVolumeUI();
+                    let newIndex = currentVideoIndex - 1;
+                    if (newIndex < 0) newIndex = videoItems.length - 1;
+                    showVideo(newIndex);
+                } else if (e.key === 'ArrowRight') {
+                    isSoundOn = true; // 用户交互后默认开启声音
+                    updateVolumeUI();
+                    let newIndex = currentVideoIndex + 1;
+                    if (newIndex >= videoItems.length) newIndex = 0;
+                    showVideo(newIndex);
+                }
+            });
+
+            // --- AI Lab 搜索框逻辑 ---
+            let currentAiUrl = "https://chat.qwen.ai/"; 
+            const trigger = document.getElementById('ai-dropdown-trigger');
+            const menu = document.getElementById('ai-dropdown-menu');
+            const label = document.getElementById('current-engine-name');
+            const jumpArea = document.getElementById('ai-search-jump');
+            const items = document.querySelectorAll('.search-dropdown-item');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('active');
+            });
+
+            items.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    items.forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    currentAiUrl = item.getAttribute('data-url');
+                    const name = item.getAttribute('data-name');
+                    label.textContent = name;
+                    menu.classList.remove('active');
+                });
+            });
+
+            jumpArea.addEventListener('click', () => {
+                window.open(currentAiUrl, '_blank');
+            });
+
+            document.addEventListener('click', () => {
+                menu.classList.remove('active');
+            });
+
+            // --- 1. 背景 Canvas 动画 ---
+            const canvas = document.getElementById('canvas-bg');
+            const ctx = canvas.getContext('2d');
+            let w, h, particles;
+            const particleCount = 80; 
+            const connectionDistance = 150; 
+
+            function initCanvas() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+                createParticles();
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.5; 
+                    this.vy = (Math.random() - 0.5) * 0.5; 
+                    this.size = Math.random() * 2;
+                    this.color = Math.random() > 0.5 ? 'rgba(0, 243, 255, ' : 'rgba(188, 19, 254, '; 
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > w) this.vx *= -1;
+                    if (this.y < 0 || this.y > h) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color + '0.8)';
+                    ctx.fill();
+                }
+            }
+
+            function createParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach((p, index) => {
+                    p.update();
+                    p.draw();
+                    for (let j = index + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (dist < connectionDistance) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(100, 100, 100, ${1 - dist / connectionDistance})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animateParticles);
+            }
+
+            window.addEventListener('resize', initCanvas);
+            initCanvas();
+            animateParticles();
+
+            // --- 新增：鼠标星星拖尾特效 ---
+            const cursorCanvas = document.getElementById('canvas-cursor');
+            const cursorCtx = cursorCanvas.getContext('2d');
+            let cursorW, cursorH;
+            let mouseX = -100, mouseY = -100;
+            let trailStars = [];
+
+            function initCursorCanvas() {
+                cursorW = cursorCanvas.width = window.innerWidth;
+                cursorH = cursorCanvas.height = window.innerHeight;
+            }
+
+            window.addEventListener('resize', initCursorCanvas);
+            initCursorCanvas();
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                createTrailStar();
+            });
+
+            function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, rotationOffset) {
+                let rot = Math.PI / 2 * 3 + rotationOffset;
+                let x = cx;
+                let y = cy;
+                let step = Math.PI / spikes;
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+                for (let i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            class TrailStar {
+                constructor() {
+                    this.x = mouseX;
+                    this.y = mouseY;
+                    this.life = 1; 
+                    this.size = Math.random() * 6 + 4; 
+                    const rand = Math.random();
+                    if(rand < 0.4) this.colorVal = '0, 243, 255'; 
+                    else if(rand < 0.8) this.colorVal = '188, 19, 254'; 
+                    else this.colorVal = '255, 255, 255'; 
+                    this.vx = (Math.random() - 0.5) * 1.5; 
+                    this.vy = (Math.random() - 0.5) * 1.5; 
+                    this.rot = Math.random() * Math.PI * 2;
+                    this.rotSpeed = (Math.random() - 0.5) * 0.1;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.rot += this.rotSpeed;
+                    this.life -= 0.015; 
+                    this.size *= 0.96; 
+                }
+                draw() {
+                    cursorCtx.fillStyle = `rgba(${this.colorVal}, ${this.life})`;
+                    drawStar(cursorCtx, this.x, this.y, 5, this.size, this.size / 2, this.rot);
+                }
+            }
+
+            function createTrailStar() {
+                trailStars.push(new TrailStar());
+            }
+
+            function animateTrail() {
+                cursorCtx.clearRect(0, 0, cursorW, cursorH);
+                for (let i = 0; i < trailStars.length; i++) {
+                    trailStars[i].update();
+                    trailStars[i].draw();
+                    if (trailStars[i].life <= 0 || trailStars[i].size < 0.5) {
+                        trailStars.splice(i, 1);
+                        i--;
+                    }
+                }
+                requestAnimationFrame(animateTrail);
+            }
+            animateTrail();
+
+            // --- 打字机 ---
+            const texts = ["Web Developer", "UI/UX Designer", "AI Enthusiast"];
+            let count = 0;
+            let index = 0;
+            let currentText = "";
+            let letter = "";
+
+            (function type() {
+                if (count === texts.length) {
+                    count = 0;
+                }
+                currentText = texts[count];
+                letter = currentText.slice(0, ++index);
+                const typeWriterElement = document.getElementById("typewriter");
+                if(typeWriterElement) {
+                    typeWriterElement.textContent = letter;
+                }
+                if (letter.length === currentText.length) {
+                    setTimeout(() => {
+                        count++;
+                        index = 0;
+                        type(); 
+                    }, 2000); 
+                } else {
+                    setTimeout(type, 100);
+                }
+            })();
+
+            // --- 滚动动画 ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.fade-in-up').forEach(el => {
+                observer.observe(el);
+            });
+
+            // --- 导航栏 ---
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
